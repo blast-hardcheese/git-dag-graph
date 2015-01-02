@@ -1,0 +1,36 @@
+digraph G {
+size ="4,4";
+
+// Commits
+"ROOT" [shape=none];
+"40b1206" [shape=box, label="40b1206\nfirst commit"];
+"e90d9eb" [shape=box, label="e90d9eb\nsecond commit", color="blue"];
+"c9b2153" [shape=box, label="c9b2153\nthird commit"];
+
+// Trees
+"d8329fc" [shape=folder, label="d8329fc\n."];
+"0155eb4" [shape=folder, label="0155eb4\n."];
+"3c4e9cd" [shape=folder, label="3c4e9cd\n."];
+
+// Blobs
+"83baae6" [shape=box3d, label="83baae6\ntest.txt"];
+"83baae7" [shape=box3d, label="83baae7\ntest1.txt"];
+
+// Orphans
+subgraph cluster_0 {
+  label="Orphans";
+  style=dashed;
+  "4b825dc" [shape=none,image="cloud.png", label="4b825dc\nfile.txt"];
+  "4b825dc"
+}
+
+// Edges
+"ROOT" -> "40b1206" [weight=100];
+"40b1206" -> "d8329fc" [weight=50];
+"d8329fc" -> "83baae6" [weight=25];
+"d8329fc" -> "83baae7" [weight=25];
+"40b1206" -> "e90d9eb" [weight=100];
+"e90d9eb" -> "0155eb4" [weight=50];
+"e90d9eb" -> "c9b2153" [weight=100];
+"c9b2153" -> "3c4e9cd" [weight=50];
+}
