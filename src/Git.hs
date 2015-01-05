@@ -1,18 +1,22 @@
 module Git where
 
 import Types
+import qualified GitParsers
 
 import Control.Applicative
 
 import System.Process
 import GHC.IO.Handle
 
-parseString :: String -> Maybe GitObjects
-parseString _ = Just $ GitObjects 0 0 0 0 0 0 0 0
-
-countObjects :: FilePath -> IO (Maybe GitObjects)
-countObjects fp = do
+runStdOut :: String -> [String] -> FilePath -> IO String
+runStdOut cmd args fp = do
   (_, Just hout, _, _) <-
-      createProcess (proc "git" ["count-objects", "-v"]) { cwd = Just fp, std_out = CreatePipe }
+      createProcess (proc cmd args) { cwd = Just fp, std_out = CreatePipe }
 
-  (\x -> (parseString x) >> Nothing) <$> (hGetContents hout)
+  hGetContents hout
+
+countObjects :: FilePath -> IO (Either String GitObjects)
+countObjects fp = GitParsers.parseGitObjects <$> runStdOut "git" ["count-objects", "-v"] fp
+
+findOrphans :: FilePath -> IO (Either String GitOrphanList)
+findOrphans fp = GitParsers.parseGitOrphanList <$> runStdOut "git" ["fsck", "--unreachable"] fp
