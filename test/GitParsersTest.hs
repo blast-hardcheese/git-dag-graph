@@ -17,7 +17,7 @@ main = hspec $ do
                   \size-pack: 6487\n\
                   \prune-packable: 0\n\
                   \garbage: 0\n\
-                  \size-garbage: 0\
+                  \size-garbage: 0\n\
                   \"
       parseGitObjects input `shouldBe` (Right $ GitObjects 12 48 13 1 6487 0 0 0)
 
@@ -30,6 +30,6 @@ main = hspec $ do
                   \prune-packable: 0\n\
                   \count: 12\n\
                   \size-garbage: 0\n\
-                  \size: 48\
+                  \size: 48\n\
                   \"
       parseGitObjects input `shouldBe` (Right $ GitObjects 12 48 13 1 6487 0 0 0)

@@ -11,7 +11,7 @@ labelNum :: Stream s m Char => String -> ParsecT s u m Int
 labelNum label = do { try (do _ <- string label; return ()); _ <- char ':'; _ <- many space; res <- many1 digit; return (read res) }
 
 accGitObjects :: ParsecT String GitObjects Identity GitObjects
-accGitObjects = do { res <- fields `sepBy1` (char '\n'); getState }
+accGitObjects = do { res <- fields `endBy1` (char '\n'); getState }
   where store :: String -> (Int -> GitObjects -> GitObjects) -> ParsecT String GitObjects Identity GitObjects
         store label f = do { val <- (labelNum label); modifyState (f val); getState }
         fields = (choice [
