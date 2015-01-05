@@ -1,21 +1,11 @@
 module Git where
 
+import Types
+
 import Control.Applicative
 
 import System.Process
 import GHC.IO.Handle
-
-data GitObjects = GitObjects {
-        count :: Int,
-        size :: Int,
-        in_pack :: Int,
-        packs :: Int,
-        size_pack :: Int,
-        prune_packable :: Int,
-        garbage :: Int,
-        size_garbage :: Int
-    }
-    deriving (Show, Eq)
 
 parseString :: String -> Maybe GitObjects
 parseString _ = Just $ GitObjects 0 0 0 0 0 0 0 0
