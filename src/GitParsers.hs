@@ -31,3 +31,19 @@ parseGitObjects input = do
   case (runParser accGitObjects init "" input) of
     Left err     -> Left $ show err
     Right result -> Right result
+
+accOrphans :: ParsecT String GitOrphanList Identity GitOrphanList
+accOrphans = do { res <- fields `endBy1` (char '\n'); modifyState reverse; getState }
+  where accumulate :: String -> (Hash -> GitOrphan) -> ParsecT String GitOrphanList Identity GitOrphanList
+        accumulate kind f = do { try (do _ <- string "unreachable "; _ <- string kind; return ()); _ <- many space; hash <- many1 hexDigit; modifyState ((f hash) :); getState}
+        fields = (choice [
+                          accumulate "blob" OrphanBlob,
+                          accumulate "commit" OrphanCommit
+                         ])
+
+parseGitOrphanList :: String -> Either String GitOrphanList
+parseGitOrphanList input = do
+  let init = []
+  case (runParser accOrphans init "" input) of
+    Left err     -> Left $ show err
+    Right result -> Right result

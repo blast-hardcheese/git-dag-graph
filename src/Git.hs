@@ -17,3 +17,6 @@ runStdOut cmd args fp = do
 
 countObjects :: FilePath -> IO (Either String GitObjects)
 countObjects fp = GitParsers.parseGitObjects <$> runStdOut "git" ["count-objects", "-v"] fp
+
+findOrphans :: FilePath -> IO (Either String GitOrphanList)
+findOrphans fp = GitParsers.parseGitOrphanList <$> runStdOut "git" ["fsck", "--unreachable"] fp
