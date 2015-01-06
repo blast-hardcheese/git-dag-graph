@@ -33,7 +33,7 @@ parseGitObjects input = do
     Right result -> Right result
 
 accOrphans :: ParsecT String GitOrphanList Identity GitOrphanList
-accOrphans = do { res <- fields `endBy1` (char '\n'); modifyState reverse; getState }
+accOrphans = do { res <- fields `endBy` (char '\n'); modifyState reverse; getState }
   where accumulate :: String -> (Hash -> GitOrphan) -> ParsecT String GitOrphanList Identity GitOrphanList
         accumulate kind f = do { try (do _ <- string "unreachable "; _ <- string kind; return ()); _ <- many space; hash <- many1 hexDigit; modifyState ((f hash) :); getState}
         fields = (choice [
