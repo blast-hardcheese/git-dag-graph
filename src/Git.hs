@@ -10,6 +10,9 @@ import Data.Maybe (isJust, listToMaybe)
 import System.Process
 import GHC.IO.Handle
 
+import System.Directory (getDirectoryContents)
+import System.FilePath ((</>))
+
 import Numeric (readHex)
 
 readMaybeHex :: String -> Maybe Int
@@ -27,3 +30,14 @@ countObjects fp = GitParsers.parseGitObjects <$> runStdOut "git" ["count-objects
 
 findOrphans :: FilePath -> IO (Either String GitOrphanList)
 findOrphans fp = GitParsers.parseGitOrphanList <$> runStdOut "git" ["fsck", "--unreachable"] fp
+
+getAllObjectHashes :: FilePath -> IO [String]
+getAllObjectHashes fp = do
+  let objectDir = fp </> ".git/objects"
+  files <- getDirectoryContents objectDir
+  let objectDirs = filter (\x -> length x == 2 && isJust (readMaybeHex x)) files
+  (concat <$>) . sequence $ (getDirectoryContentsPrependingPath objectDir) <$> objectDirs
+  where filterDots :: [String] -> [String]
+        filterDots = filter (\x -> x /= "." && x /= "..")
+        getDirectoryContentsPrependingPath :: FilePath -> FilePath -> IO [FilePath]
+        getDirectoryContentsPrependingPath objectDir x = ((x ++) <$>) <$> filterDots <$> (getDirectoryContents $ objectDir </> x)
