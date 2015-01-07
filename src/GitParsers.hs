@@ -2,10 +2,9 @@
 module GitParsers where
 
 import Control.Monad.Identity
+import Text.Parsec
 
 import Types
-
-import Text.Parsec
 
 labelNum :: Stream s m Char => String -> ParsecT s u m Int
 labelNum label = do { try (do _ <- string label; return ()); _ <- char ':'; _ <- many space; res <- many1 digit; return (read res) }
