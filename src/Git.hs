@@ -25,6 +25,15 @@ runStdOut cmd args fp = do
 
   hGetContents hout
 
+runStdOutWithIn :: String -> [String] -> FilePath -> String -> IO String
+runStdOutWithIn cmd args fp stdin = do
+  (Just hin, Just hout, _, _) <-
+      createProcess (proc cmd args) { cwd = Just fp, std_out = CreatePipe, std_in = CreatePipe }
+
+  hPutStr hin stdin
+  hClose hin
+  hGetContents hout
+
 countObjects :: FilePath -> IO (Either String GitObjects)
 countObjects fp = GitParsers.parseGitObjects <$> runStdOut "git" ["count-objects", "-v"] fp
 
@@ -41,3 +50,9 @@ getAllObjectHashes fp = do
         filterDots = filter (\x -> x /= "." && x /= "..")
         getDirectoryContentsPrependingPath :: FilePath -> FilePath -> IO [FilePath]
         getDirectoryContentsPrependingPath objectDir x = ((x ++) <$>) <$> filterDots <$> (getDirectoryContents $ objectDir </> x)
+
+objectHashesToObjects :: FilePath -> [FilePath] -> IO (Either String GitObjectList)
+objectHashesToObjects fp objects = do
+  out <- runStdOutWithIn "git" ["cat-file", "--batch-check"] fp (unlines objects)
+  let retval = GitParsers.parseGitObjectList out
+  return retval

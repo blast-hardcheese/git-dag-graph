@@ -13,8 +13,14 @@ data GitObjects = GitObjects {
     deriving (Show, Eq)
 
 type Hash = String
+type Size = Int
 
 data GitOrphan = OrphanBlob Hash | OrphanCommit Hash
     deriving (Show, Eq)
 
 type GitOrphanList = [GitOrphan]
+
+data GitObject = GitBlobObject Hash Size | GitCommitObject Hash Size | GitTreeObject Hash Size
+    deriving (Show, Eq)
+
+type GitObjectList = [GitObject]
