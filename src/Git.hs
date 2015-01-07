@@ -5,8 +5,15 @@ import qualified GitParsers
 
 import Control.Applicative
 
+import Data.Maybe (isJust, listToMaybe)
+
 import System.Process
 import GHC.IO.Handle
+
+import Numeric (readHex)
+
+readMaybeHex :: String -> Maybe Int
+readMaybeHex = (fst <$>) . listToMaybe . readHex
 
 runStdOut :: String -> [String] -> FilePath -> IO String
 runStdOut cmd args fp = do
