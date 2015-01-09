@@ -1,7 +1,7 @@
 module Git where
 
 import Types
-import qualified GitParsers
+import GitParsers (parseGitObjects, parseGitOrphanList, parseGitObjectList)
 
 import Control.Applicative
 
@@ -35,10 +35,10 @@ runStdOutWithIn cmd args fp stdin = do
   hGetContents hout
 
 countObjects :: FilePath -> IO (Either String GitObjects)
-countObjects fp = GitParsers.parseGitObjects <$> runStdOut "git" ["count-objects", "-v"] fp
+countObjects fp = parseGitObjects <$> runStdOut "git" ["count-objects", "-v"] fp
 
 findOrphans :: FilePath -> IO (Either String GitOrphanList)
-findOrphans fp = GitParsers.parseGitOrphanList <$> runStdOut "git" ["fsck", "--unreachable"] fp
+findOrphans fp = parseGitOrphanList <$> runStdOut "git" ["fsck", "--unreachable"] fp
 
 getAllObjectHashes :: FilePath -> IO [String]
 getAllObjectHashes fp = do
@@ -52,7 +52,4 @@ getAllObjectHashes fp = do
         getDirectoryContentsPrependingPath objectDir x = ((x ++) <$>) <$> filterDots <$> (getDirectoryContents $ objectDir </> x)
 
 objectHashesToObjects :: FilePath -> [FilePath] -> IO (Either String GitObjectList)
-objectHashesToObjects fp objects = do
-  out <- runStdOutWithIn "git" ["cat-file", "--batch-check"] fp (unlines objects)
-  let retval = GitParsers.parseGitObjectList out
-  return retval
+objectHashesToObjects fp objects = parseGitObjectList <$> runStdOutWithIn "git" ["cat-file", "--batch-check"] fp (unlines objects)
