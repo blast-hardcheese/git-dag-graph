@@ -33,14 +33,13 @@ main = do
   {-print files-}
   {-putStrLn ""-}
 
-  putStrLn "objectHashesToObjects"
+  {-putStrLn "objectHashesToObjects"-}
   (Right objects) <- objectHashesToObjects "test.git" files
-  print objects
-  putStrLn ""
+  {-print objects-}
+  {-putStrLn ""-}
 
   (pairs, orphans) <- extractTrees "test.git" objects
-  print (length pairs, length orphans)
-  print $ head orphans
+  (commits, orphans) <- extractCommits "test.git" orphans
 
   let orphanNodes = ((objectToNode BoxShape "?") <$> orphans)
 

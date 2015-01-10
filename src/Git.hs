@@ -3,7 +3,7 @@ module Git where
 import Debug.Trace
 
 import Types
-import GitParsers (parseGitObjects, parseGitOrphanList, parseGitObjectList, parseTree)
+import GitParsers (parseGitObjects, parseGitOrphanList, parseGitObjectList, parseTree, parseCatCommit)
 
 import Control.Applicative
 
@@ -78,3 +78,8 @@ extractTrees fp objects = do
   let orphans = removeClaimed objects treePairs
 
   return (treePairs, orphans)
+
+-- Given a list of gitObjects, extract commitPairs and orphans
+extractCommits :: FilePath -> [GitObject] -> IO ([(GitObject, GitObject)], [GitObject])
+extractCommits fp objects = do
+  return ([], [])
