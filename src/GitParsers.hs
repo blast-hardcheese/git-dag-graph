@@ -22,9 +22,9 @@ space1 = many1 (char ' ')
 labelNum :: Stream s m Char => String -> ParsecT s u m Int
 labelNum label = do { try (do _ <- string label; return ()); _ <- char ':'; _ <- many space; res <- many1 digit; return (read res) }
 
-accGitObjects :: ParsecT String GitObjects Identity GitObjects
+accGitObjects :: ParsecT String GitObjectStats Identity GitObjectStats
 accGitObjects = do { res <- fields `endBy1` (char '\n'); getState }
-  where store :: String -> (Int -> GitObjects -> GitObjects) -> ParsecT String GitObjects Identity GitObjects
+  where store :: String -> (Int -> GitObjectStats -> GitObjectStats) -> ParsecT String GitObjectStats Identity GitObjectStats
         store label f = do { val <- (labelNum label); modifyState (f val); getState }
         fields = (choice [
                           store "size-pack"      (\v s -> s { size_pack = v }),
@@ -37,9 +37,9 @@ accGitObjects = do { res <- fields `endBy1` (char '\n'); getState }
                           store "count"          (\v s -> s { Types.count = v })
                          ])
 
-parseGitObjects :: String -> Either String GitObjects
+parseGitObjects :: String -> Either String GitObjectStats
 parseGitObjects input = do
-  let init = GitObjects 0 0 0 0 0 0 0 0
+  let init = GitObjectStats 0 0 0 0 0 0 0 0
   case (runParser accGitObjects init "" input) of
     Left err     -> Left $ show err
     Right result -> Right result

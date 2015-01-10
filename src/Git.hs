@@ -37,7 +37,7 @@ runStdOutWithIn cmd args fp stdin = do
   hClose hin
   hGetContents hout
 
-countObjects :: FilePath -> IO (Either String GitObjects)
+countObjects :: FilePath -> IO (Either String GitObjectStats)
 countObjects fp = parseGitObjects <$> runStdOut "git" ["count-objects", "-v"] fp
 
 findOrphans :: FilePath -> IO (Either String GitOrphanList)

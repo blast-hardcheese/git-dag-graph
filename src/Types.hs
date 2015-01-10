@@ -1,6 +1,6 @@
 module Types where
 
-data GitObjects = GitObjects {
+data GitObjectStats = GitObjectStats {
         count :: Int,
         size :: Int,
         in_pack :: Int,
