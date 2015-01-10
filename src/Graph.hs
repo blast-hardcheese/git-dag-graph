@@ -1,9 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Graph where
 
+import Control.Applicative
+
 import Data.GraphViz
 import Data.GraphViz.Types.Canonical
 import Data.GraphViz.Attributes.Complete (Attribute (Weight, Image), StyleName (Dashed), StyleItem (SItem))
+
+import qualified Data.Text.Lazy as T
+
+import Types
 
 gitgraph = DotGraph { strictGraph = True
                     , directedGraph = True
@@ -50,6 +56,24 @@ gitgraph = DotGraph { strictGraph = True
                                                  , edgeStmts = []}
                       }
                     ]
+
+shortHash :: Hash -> ShortHash
+shortHash = take 7
+
+objectToNode :: Shape -> FilePath -> GitObject -> DotNode String
+objectToNode nodeShape name o = DotNode hash [shape nodeShape, textLabel (T.pack $ hash ++ "\n" ++ name)]
+  where hash = shortHash $ objectHash o
+
+fromTreeEntry :: GitTreeEntry -> DotNode String
+fromTreeEntry (GitTreeEntry _ o@(GitBlobObject h _) name) = objectToNode Box3D name o
+fromTreeEntry (GitTreeEntry _ o@(GitTreeObject h _) name) = objectToNode Folder name o
+
+treePairToNodesAndEdges :: (GitObject, [GitTreeEntry]) -> ([DotNode String], [DotEdge String])
+treePairToNodesAndEdges (tree, treeNodes) = (nodes, edges)
+  where treeNode = (DotNode (shortHash $ objectHash tree) [shape Folder, textLabel (T.pack (shortHash $ objectHash tree))]) :: DotNode String
+        nodes = treeNode : (fromTreeEntry <$> treeNodes)
+        treeHash = shortHash $ objectHash tree
+        edges = (\h -> DotEdge treeHash h [Weight $ Int 50]) <$> (shortHash . objectHash . treeObject) <$> treeNodes
 
 generateStaticGraph :: IO String
 generateStaticGraph = do
