@@ -13,6 +13,8 @@ data GitObjects = GitObjects {
     deriving (Show, Eq)
 
 type Hash = String
+type ShortHash = String
+
 type Size = Int
 
 data GitOrphan = OrphanBlob Hash | OrphanCommit Hash
@@ -28,5 +30,5 @@ data GitObject = GitBlobObject   { objectHash :: Hash, objectSize :: Size }
 type GitObjectList = [GitObject]
 
 type Modes = Integer
-data GitTreeEntry = GitTreeEntry Modes GitObject FilePath
+data GitTreeEntry = GitTreeEntry { treeMode :: Modes, treeObject :: GitObject, treeName :: FilePath }
     deriving (Show, Eq)
