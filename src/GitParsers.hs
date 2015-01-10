@@ -47,11 +47,14 @@ parseGitObjects input = do
 accOrphans :: ParsecT String GitOrphanList Identity GitOrphanList
 accOrphans = do { res <- fields `endBy` (char '\n'); modifyState reverse; getState }
   where accumulate :: String -> (Hash -> GitOrphan) -> ParsecT String GitOrphanList Identity GitOrphanList
-        accumulate kind f = do { try (do _ <- string "unreachable "; _ <- string kind; return ()); _ <- many space; hash <- many1 hexDigit; modifyState ((f hash) :); getState}
+        accumulate kind f = do { try (do _ <- string "unreachable "; _ <- string kind; return ()); _ <- many space; hash <- parseHash; modifyState ((f hash) :); getState}
         fields = (choice [
                           accumulate "blob" OrphanBlob,
                           accumulate "commit" OrphanCommit
                          ])
+
+parseHash :: Stream s m Char => ParsecT s u m [Char]
+parseHash = many1 hexDigit
 
 parseGitOrphanList :: String -> Either String GitOrphanList
 parseGitOrphanList input = do
@@ -62,7 +65,7 @@ parseGitOrphanList input = do
 
 parseHashKindSize :: Monad m => String -> (Hash -> Size -> GitObject) -> ParsecT String u m GitObject
 parseHashKindSize kind f = try (do
-  hash <- many1 hexDigit
+  hash <- parseHash
   _ <- char ' '
   _ <- string kind
   _ <- char ' '
@@ -73,7 +76,7 @@ parseKindHashSize :: Monad m => String -> (Hash -> Size -> GitObject) -> ParsecT
 parseKindHashSize kind f = try (do
   _ <- string kind
   _ <- space1
-  hash <- many1 hexDigit
+  hash <- parseHash
   _ <- space1
   size <- read <$> many1 digit
   return (f hash size))
