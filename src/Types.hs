@@ -30,8 +30,6 @@ data GitObject = GitBlobObject   { objectHash :: Hash, objectSize :: Size }
 simpleGitCommit :: Hash -> Size -> GitObject
 simpleGitCommit h s = GitCommitObject h s Nothing Nothing
 
-type GitObjectList = [GitObject]
-
 type Modes = Integer
 data GitTreeEntry = GitTreeEntry { treeMode :: Modes, treeObject :: GitObject, treeName :: FilePath }
     deriving (Show, Eq)

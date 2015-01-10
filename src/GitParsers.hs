@@ -85,10 +85,10 @@ objectDesc f = (choice [
                 f "tree" GitTreeObject
               ])
 
-accObjects :: ParsecT String GitObjectList Identity GitObjectList
+accObjects :: ParsecT String [GitObject] Identity [GitObject]
 accObjects = do { _ <- (do o <- (objectDesc parseHashKindSize); modifyState (o:); return ()) `endBy` (char '\n'); modifyState reverse; getState }
 
-parseGitObjectList :: String -> Either String GitObjectList
+parseGitObjectList :: String -> Either String [GitObject]
 parseGitObjectList input = do
   let init = []
   case (runParser accObjects init "" input) of

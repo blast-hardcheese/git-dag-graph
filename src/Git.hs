@@ -54,7 +54,7 @@ getAllObjectHashes fp = do
         getDirectoryContentsPrependingPath :: FilePath -> FilePath -> IO [FilePath]
         getDirectoryContentsPrependingPath objectDir x = ((x ++) <$>) <$> filterDots <$> (getDirectoryContents $ objectDir </> x)
 
-objectHashesToObjects :: FilePath -> [FilePath] -> IO (Either String GitObjectList)
+objectHashesToObjects :: FilePath -> [FilePath] -> IO (Either String [GitObject])
 objectHashesToObjects fp objects = parseGitObjectList <$> runStdOutWithIn "git" ["cat-file", "--batch-check"] fp (unlines objects)
 
 lsTree :: FilePath -> Hash -> IO (Either String [GitTreeEntry])
