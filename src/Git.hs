@@ -1,10 +1,13 @@
 module Git where
 
+import Debug.Trace
+
 import Types
 import GitParsers (parseGitObjects, parseGitOrphanList, parseGitObjectList)
 
 import Control.Applicative
 
+import Data.Either
 import Data.Maybe (isJust, listToMaybe)
 
 import System.Process
@@ -14,6 +17,10 @@ import System.Directory (getDirectoryContents)
 import System.FilePath ((</>))
 
 import Numeric (readHex)
+
+recoverEither :: Either String [b] -> [b]
+recoverEither (Left err) = trace ("Parse error (" ++ err ++ ")") []
+recoverEither (Right x) = x
 
 readMaybeHex :: String -> Maybe Int
 readMaybeHex = (fst <$>) . listToMaybe . readHex
