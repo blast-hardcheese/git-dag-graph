@@ -3,7 +3,7 @@ module Git where
 import Debug.Trace
 
 import Types
-import GitParsers (parseGitObjects, parseGitOrphanList, parseGitObjectList)
+import GitParsers (parseGitObjects, parseGitOrphanList, parseGitObjectList, parseTree)
 
 import Control.Applicative
 
@@ -58,5 +58,8 @@ getAllObjectHashes fp = do
         getDirectoryContentsPrependingPath :: FilePath -> FilePath -> IO [FilePath]
         getDirectoryContentsPrependingPath objectDir x = ((x ++) <$>) <$> filterDots <$> (getDirectoryContents $ objectDir </> x)
 
-objectHashesToObjects :: FilePath -> [FilePath] -> IO (Either String GitObjectList)
-objectHashesToObjects fp objects = parseGitObjectList <$> runStdOutWithIn "git" ["cat-file", "--batch-check"] fp (unlines objects)
+objectHashesToObjects :: FilePath -> [FilePath] -> IO GitObjectList
+objectHashesToObjects fp objects = recoverEither <$> parseGitObjectList <$> runStdOutWithIn "git" ["cat-file", "--batch-check"] fp (unlines objects)
+
+lsTree :: FilePath -> Hash -> IO [GitTreeEntry]
+lsTree fp hash = recoverEither <$> parseTree <$> runStdOut "git" ["ls-tree", "-l", hash] fp
