@@ -18,10 +18,6 @@ import System.FilePath ((</>))
 
 import Numeric (readHex)
 
-recoverEither :: Either String [b] -> [b]
-recoverEither (Left err) = trace ("Parse error (" ++ err ++ ")") []
-recoverEither (Right x) = x
-
 readMaybeHex :: String -> Maybe Int
 readMaybeHex = (fst <$>) . listToMaybe . readHex
 
@@ -47,7 +43,7 @@ countObjects fp = parseGitObjects <$> runStdOut "git" ["count-objects", "-v"] fp
 findOrphans :: FilePath -> IO (Either String GitOrphanList)
 findOrphans fp = parseGitOrphanList <$> runStdOut "git" ["fsck", "--unreachable"] fp
 
-getAllObjectHashes :: FilePath -> IO [String]
+getAllObjectHashes :: FilePath -> IO [FilePath]
 getAllObjectHashes fp = do
   let objectDir = fp </> ".git/objects"
   files <- getDirectoryContents objectDir
@@ -58,8 +54,8 @@ getAllObjectHashes fp = do
         getDirectoryContentsPrependingPath :: FilePath -> FilePath -> IO [FilePath]
         getDirectoryContentsPrependingPath objectDir x = ((x ++) <$>) <$> filterDots <$> (getDirectoryContents $ objectDir </> x)
 
-objectHashesToObjects :: FilePath -> [FilePath] -> IO GitObjectList
-objectHashesToObjects fp objects = recoverEither <$> parseGitObjectList <$> runStdOutWithIn "git" ["cat-file", "--batch-check"] fp (unlines objects)
+objectHashesToObjects :: FilePath -> [FilePath] -> IO (Either String GitObjectList)
+objectHashesToObjects fp objects = parseGitObjectList <$> runStdOutWithIn "git" ["cat-file", "--batch-check"] fp (unlines objects)
 
-lsTree :: FilePath -> Hash -> IO [GitTreeEntry]
-lsTree fp hash = recoverEither <$> parseTree <$> runStdOut "git" ["ls-tree", "-l", hash] fp
+lsTree :: FilePath -> Hash -> IO (Either String [GitTreeEntry])
+lsTree fp hash = parseTree <$> runStdOut "git" ["ls-tree", "-l", hash] fp

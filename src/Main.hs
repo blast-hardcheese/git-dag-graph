@@ -25,7 +25,7 @@ main = do
   print files
 
   putStrLn "objectHashesToObjects"
-  objects <- objectHashesToObjects "test.git" files
+  (Right objects) <- objectHashesToObjects "test.git" files
   print objects
 
   let nonEmptyTree = head $ filter (\x -> case x of { (GitTreeObject h s) -> s /= 0; _ -> False }) objects
