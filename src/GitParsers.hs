@@ -6,6 +6,15 @@ import Text.Parsec
 
 import Types
 
+fromBaseN :: (Num a, Ord a, Read a) => a -> String -> a
+fromBaseN base = foldl (\a x -> a * 8 + (read [x])) 0
+
+fromOctal :: (Num a, Ord a, Read a) => String -> a
+fromOctal = fromBaseN 8
+
+octal :: Stream s m Char => ParsecT s u m Integer
+octal = fromOctal <$> many1 octDigit
+
 labelNum :: Stream s m Char => String -> ParsecT s u m Int
 labelNum label = do { try (do _ <- string label; return ()); _ <- char ':'; _ <- many space; res <- many1 digit; return (read res) }
 
