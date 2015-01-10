@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import Control.Applicative ((<$>))
@@ -7,29 +8,59 @@ import GHC.IO.Handle
 import Git
 import Types
 import Data.Maybe (listToMaybe, fromMaybe)
+import qualified Data.Text.Lazy as T
+
+import Data.GraphViz
+import Data.GraphViz.Types.Canonical
+import Data.GraphViz.Attributes.Complete (Attribute (Weight, Image), StyleName (Dashed), StyleItem (SItem))
 
 main :: IO ()
 main = do
   fname <- generateStaticGraph
   putStrLn fname
 
-  objects <- countObjects "test.git"
-  print objects
+  {-objects <- countObjects "test.git"-}
+  {-print objects-}
+  {-putStrLn ""-}
 
-  putStrLn "findOrphans"
-  orphans <- findOrphans "test.git"
-  print orphans
+  {-putStrLn "findOrphans"-}
+  {-orphans <- findOrphans "test.git"-}
+  {-print orphans-}
+  {-putStrLn ""-}
 
-  putStrLn "getAllObjectHashes"
+  {-putStrLn "getAllObjectHashes"-}
   files <- getAllObjectHashes "test.git"
-  print files
+  {-print files-}
+  {-putStrLn ""-}
 
   putStrLn "objectHashesToObjects"
   (Right objects) <- objectHashesToObjects "test.git" files
   print objects
+  putStrLn ""
 
-  let nonEmptyTree = head $ filter (\x -> case x of { (GitTreeObject h s) -> s /= 0; _ -> False }) objects
-  putStrLn "lsTree"
-  print nonEmptyTree
-  res <- lsTree "test.git" $ objectHash nonEmptyTree
-  print res
+  (pairs, orphans) <- extractTrees "test.git" objects
+  print (length pairs, length orphans)
+  print $ head orphans
+
+  let orphanNodes = ((objectToNode BoxShape "?") <$> orphans)
+
+  let orphanGraph = DotSG { isCluster = True
+                          , subGraphID = Just $ Str "Orphans"
+                          , subGraphStmts = DotStmts { attrStmts = [GraphAttrs [textLabel "Orphans", style (SItem Dashed [])]]
+                                                     , subGraphs = []
+                                                     , nodeStmts = orphanNodes
+                                                     , edgeStmts = [] }}
+
+  let nodesAndEdges = treePairToNodesAndEdges <$> pairs
+  let nodes = concat $ fst <$> nodesAndEdges
+  let edges = concat $ snd <$> nodesAndEdges
+  let graph = DotGraph { strictGraph = True
+                       , directedGraph = True
+                       , graphID = Nothing
+                       , graphStatements = DotStmts { attrStmts = []
+                                                    , subGraphs = [orphanGraph]
+                                                    , nodeStmts = nodes
+                                                    , edgeStmts = edges }}
+
+  fname <- generateGraph $ graph
+  putStrLn fname

@@ -79,3 +79,6 @@ generateStaticGraph :: IO String
 generateStaticGraph = do
   fname <- runGraphviz (gitgraph :: DotGraph String) DotOutput "output/thing.dot"
   runGraphviz (gitgraph :: DotGraph String) Png "output/thing.png"
+
+generateGraph :: (DotGraph String) -> IO String
+generateGraph g = runGraphviz g Png "output/thing2.png"
