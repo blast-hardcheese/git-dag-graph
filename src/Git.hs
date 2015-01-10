@@ -59,3 +59,22 @@ objectHashesToObjects fp objects = parseGitObjectList <$> runStdOutWithIn "git" 
 
 lsTree :: FilePath -> Hash -> IO (Either String [GitTreeEntry])
 lsTree fp hash = parseTree <$> runStdOut "git" ["ls-tree", "-l", hash] fp
+
+-- Given a list of gitObjects, extract treePairs and orphans
+extractTrees :: FilePath -> [GitObject] -> IO ([(GitObject, [GitTreeEntry])], [GitObject])
+extractTrees fp objects = do
+  let trees = filter (\x -> case x of { (GitTreeObject h s) -> True; _ -> False }) objects :: [GitObject]
+
+  let handle :: GitObject -> (Either String [GitTreeEntry]) -> (GitObject, [GitTreeEntry])
+      handle o (Left err) = trace ("ERROR! " ++ err) (o, [])
+      handle o (Right xs) = (o, xs)
+
+  treePairs <- sequence $ map (\o -> (handle o) <$> (lsTree fp (objectHash o))) trees
+
+  let removeClaimed :: [GitObject] -> [(GitObject, [GitTreeEntry])] -> [GitObject]
+      removeClaimed xs pairs = filter ((flip notElem (concat $ claimedHashes <$> pairs)) . objectHash) xs
+        where claimedHashes (o, xs) = objectHash <$> treeObject <$> xs
+
+  let orphans = removeClaimed objects treePairs
+
+  return (treePairs, orphans)
