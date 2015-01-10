@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 module GitParsers where
 
+import Control.Applicative ((<*>),(<$>))
 import Control.Monad.Identity
 import Text.Parsec
 
