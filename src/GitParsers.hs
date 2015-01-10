@@ -81,7 +81,7 @@ parseKindHashSize kind f = try (do
 objectDesc :: Monad m => (String -> (Hash -> Size -> GitObject) -> ParsecT String u m GitObject) -> ParsecT String u m GitObject
 objectDesc f = (choice [
                 f "blob" GitBlobObject,
-                f "commit" GitCommitObject,
+                f "commit" simpleGitCommit,
                 f "tree" GitTreeObject
               ])
 
