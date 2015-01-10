@@ -31,5 +31,5 @@ main = do
   let nonEmptyTree = head $ filter (\x -> case x of { (GitTreeObject h s) -> s /= 0; _ -> False }) objects
   putStrLn "lsTree"
   print nonEmptyTree
-  res <- lsTree "test.git" $ getHash nonEmptyTree
+  res <- lsTree "test.git" $ objectHash nonEmptyTree
   print res

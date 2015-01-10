@@ -20,13 +20,10 @@ data GitOrphan = OrphanBlob Hash | OrphanCommit Hash
 
 type GitOrphanList = [GitOrphan]
 
-data GitObject = GitBlobObject Hash Size | GitCommitObject Hash Size | GitTreeObject Hash Size
+data GitObject = GitBlobObject   { objectHash :: Hash, objectSize :: Size }
+               | GitCommitObject { objectHash :: Hash, objectSize :: Size }
+               | GitTreeObject   { objectHash :: Hash, objectSize :: Size }
     deriving (Show, Eq)
-
-getHash :: GitObject -> Hash
-getHash (GitBlobObject h _) = h
-getHash (GitCommitObject h _) = h
-getHash (GitTreeObject h _) = h
 
 type GitObjectList = [GitObject]
 
