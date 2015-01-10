@@ -23,6 +23,11 @@ type GitOrphanList = [GitOrphan]
 data GitObject = GitBlobObject Hash Size | GitCommitObject Hash Size | GitTreeObject Hash Size
     deriving (Show, Eq)
 
+getHash :: GitObject -> Hash
+getHash (GitBlobObject h _) = h
+getHash (GitCommitObject h _) = h
+getHash (GitTreeObject h _) = h
+
 type GitObjectList = [GitObject]
 
 type Modes = Integer
