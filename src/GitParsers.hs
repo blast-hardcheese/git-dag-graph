@@ -56,15 +56,23 @@ parseGitOrphanList input = do
     Left err     -> Left $ show err
     Right result -> Right result
 
+objectDesc :: Monad m => ParsecT String u m GitObject
+objectDesc = (choice [
+                parseLine "blob" GitBlobObject,
+                parseLine "commit" GitCommitObject,
+                parseLine "tree" GitTreeObject
+              ])
+  where parseLine :: Monad m => String -> (Hash -> Size -> GitObject) -> ParsecT String u m GitObject
+        parseLine kind f = try (do
+                                   hash <- many1 hexDigit
+                                   _ <- char ' '
+                                   _ <- string kind
+                                   _ <- char ' '
+                                   size <- read <$> many1 digit
+                                   return (f hash size))
+
 accObjects :: ParsecT String GitObjectList Identity GitObjectList
-accObjects = do { res <- fields `endBy` (char '\n'); modifyState reverse; getState }
-  where accumulate :: String -> (Hash -> Size -> GitObject) -> ParsecT String GitObjectList Identity GitObjectList
-        accumulate kind f = do { try (do hash <- many hexDigit; _ <- char ' '; _ <- string kind; _ <- char ' '; size <- many1 digit; return (hash, size); modifyState ((f hash (read size)) :); getState) }
-        fields = (choice [
-                          accumulate "blob" GitBlobObject,
-                          accumulate "commit" GitCommitObject,
-                          accumulate "tree" GitTreeObject
-                         ])
+accObjects = do { _ <- (do o <- objectDesc; modifyState (o:); return ()) `endBy` (char '\n'); modifyState reverse; getState }
 
 parseGitObjectList :: String -> Either String GitObjectList
 parseGitObjectList input = do
