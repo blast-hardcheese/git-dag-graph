@@ -24,3 +24,7 @@ data GitObject = GitBlobObject Hash Size | GitCommitObject Hash Size | GitTreeOb
     deriving (Show, Eq)
 
 type GitObjectList = [GitObject]
+
+type Modes = Integer
+data GitTreeEntry = GitTreeEntry Modes GitObject FilePath
+    deriving (Show, Eq)

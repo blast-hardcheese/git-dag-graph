@@ -16,6 +16,9 @@ fromOctal = fromBaseN 8
 octal :: Stream s m Char => ParsecT s u m Integer
 octal = fromOctal <$> many1 octDigit
 
+space1 :: Stream s m Char => Monad m => ParsecT s u m [Char]
+space1 = many1 (char ' ')
+
 labelNum :: Stream s m Char => String -> ParsecT s u m Int
 labelNum label = do { try (do _ <- string label; return ()); _ <- char ':'; _ <- many space; res <- many1 digit; return (read res) }
 
@@ -66,6 +69,15 @@ parseHashKindSize kind f = try (do
   size <- read <$> many1 digit
   return (f hash size))
 
+parseKindHashSize :: Monad m => String -> (Hash -> Size -> GitObject) -> ParsecT String u m GitObject
+parseKindHashSize kind f = try (do
+  _ <- string kind
+  _ <- space1
+  hash <- many1 hexDigit
+  _ <- space1
+  size <- read <$> many1 digit
+  return (f hash size))
+
 objectDesc :: Monad m => (String -> (Hash -> Size -> GitObject) -> ParsecT String u m GitObject) -> ParsecT String u m GitObject
 objectDesc f = (choice [
                 f "blob" GitBlobObject,
@@ -82,3 +94,20 @@ parseGitObjectList input = do
   case (runParser accObjects init "" input) of
     Left err    -> Left $ show err
     Right result -> Right result
+
+fileName :: Stream s m Char => ParsecT s u m String
+fileName = many1 $ choice (alphaNum : (fmap char "_ ."))
+
+parseTreeLine :: ParsecT String u Identity GitTreeEntry
+parseTreeLine = do
+                  mode <- octal
+                  _ <- space1
+                  desc <- (objectDesc parseKindHashSize)
+                  _ <- char '\t'
+                  name <- fileName
+                  return $ GitTreeEntry mode desc name
+
+parseTree :: String -> Either String [GitTreeEntry]
+parseTree x = case (parse (parseTreeLine `endBy` (char '\n')) "" x) of
+  Left err     -> Left $ show err
+  Right result -> Right result
