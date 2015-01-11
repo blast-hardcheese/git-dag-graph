@@ -123,7 +123,7 @@ catCommitLines :: ParsecT String GitObject Identity GitObject
 catCommitLines = do
   let options = (choice [
                f "tree" parseHash (\v s -> s { commitTree = Just v })
-             , f "parent" parseHash (\v s -> s { commitParents = Just $ (fromMaybe [] (commitParents s)) ++ [v] })
+             , f "parent" parseHash (\v s -> s { commitParents = (commitParents s) ++ [v] })
              , f "author" dropLine (\v s -> s)
              , f "committer" dropLine (\v s -> s)
              ])

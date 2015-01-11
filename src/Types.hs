@@ -23,12 +23,12 @@ data GitOrphan = OrphanBlob Hash | OrphanCommit Hash
 type GitOrphanList = [GitOrphan]
 
 data GitObject = GitBlobObject   { objectHash :: Hash, objectSize :: Size }
-               | GitCommitObject { objectHash :: Hash, objectSize :: Size, commitTree :: Maybe Hash, commitParents :: Maybe [Hash] }
+               | GitCommitObject { objectHash :: Hash, objectSize :: Size, commitTree :: Maybe Hash, commitParents :: [Hash] }
                | GitTreeObject   { objectHash :: Hash, objectSize :: Size }
     deriving (Show, Eq)
 
 simpleGitCommit :: Hash -> Size -> GitObject
-simpleGitCommit h s = GitCommitObject h s Nothing Nothing
+simpleGitCommit h s = GitCommitObject h s Nothing []
 
 type Modes = Integer
 data GitTreeEntry = GitTreeEntry { treeMode :: Modes, treeObject :: GitObject, treeName :: FilePath }
