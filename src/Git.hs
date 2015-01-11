@@ -18,6 +18,8 @@ import System.FilePath ((</>))
 
 import Numeric (readHex)
 
+import Text.Parsec (ParseError)
+
 readMaybeHex :: String -> Maybe Int
 readMaybeHex = (fst <$>) . listToMaybe . readHex
 
@@ -37,10 +39,10 @@ runStdOutWithIn cmd args fp stdin = do
   hClose hin
   hGetContents hout
 
-countObjects :: FilePath -> IO (Either String GitObjectStats)
+countObjects :: FilePath -> IO (Either ParseError GitObjectStats)
 countObjects fp = parseGitObjects <$> runStdOut "git" ["count-objects", "-v"] fp
 
-findOrphans :: FilePath -> IO (Either String GitOrphanList)
+findOrphans :: FilePath -> IO (Either ParseError GitOrphanList)
 findOrphans fp = parseGitOrphanList <$> runStdOut "git" ["fsck", "--unreachable"] fp
 
 getAllObjectHashes :: FilePath -> IO [FilePath]
@@ -54,13 +56,13 @@ getAllObjectHashes fp = do
         getDirectoryContentsPrependingPath :: FilePath -> FilePath -> IO [FilePath]
         getDirectoryContentsPrependingPath objectDir x = ((x ++) <$>) <$> filterDots <$> (getDirectoryContents $ objectDir </> x)
 
-objectHashesToObjects :: FilePath -> [FilePath] -> IO (Either String [GitObject])
+objectHashesToObjects :: FilePath -> [FilePath] -> IO (Either ParseError [GitObject])
 objectHashesToObjects fp objects = parseGitObjectList <$> runStdOutWithIn "git" ["cat-file", "--batch-check"] fp (unlines objects)
 
-lsTree :: FilePath -> Hash -> IO (Either String [GitTreeEntry])
+lsTree :: FilePath -> Hash -> IO (Either ParseError [GitTreeEntry])
 lsTree fp hash = parseTree <$> runStdOut "git" ["ls-tree", "-l", hash] fp
 
-catFile :: FilePath -> GitObject -> IO (Either String GitObject)
+catFile :: FilePath -> GitObject -> IO (Either ParseError GitObject)
 catFile fp o@(GitCommitObject h _ _ _) = parseCatCommit o <$> runStdOut "git" ["cat-file", "-p", h] fp
 
 -- Convenience:
@@ -70,8 +72,8 @@ extractTrees :: FilePath -> [GitObject] -> IO ([(GitObject, [GitTreeEntry])], [G
 extractTrees fp objects = do
   let trees = filter (\x -> case x of { (GitTreeObject h s) -> True; _ -> False }) objects :: [GitObject]
 
-  let handle :: GitObject -> (Either String [GitTreeEntry]) -> (GitObject, [GitTreeEntry])
-      handle o (Left err) = trace ("ERROR! " ++ err) (o, [])
+  let handle :: GitObject -> (Either ParseError [GitTreeEntry]) -> (GitObject, [GitTreeEntry])
+      handle o (Left err) = trace ("ERROR! " ++ (show err) ++ "\n" ++ (show o)) (o, [])
       handle o (Right xs) = (o, xs)
 
   treePairs <- sequence $ map (\o -> (handle o) <$> (lsTree fp (objectHash o))) trees

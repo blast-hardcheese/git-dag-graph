@@ -41,12 +41,10 @@ accGitObjects = do { res <- fields `endBy1` (char '\n'); getState }
                           store "count"          (\v s -> s { Types.count = v })
                          ])
 
-parseGitObjects :: String -> Either String GitObjectStats
+parseGitObjects :: String -> Either ParseError GitObjectStats
 parseGitObjects input = do
   let init = GitObjectStats 0 0 0 0 0 0 0 0
-  case (runParser accGitObjects init "" input) of
-    Left err     -> Left $ show err
-    Right result -> Right result
+  runParser accGitObjects init "" input
 
 accOrphans :: ParsecT String GitOrphanList Identity GitOrphanList
 accOrphans = do { res <- fields `endBy` (char '\n'); modifyState reverse; getState }
@@ -60,12 +58,10 @@ accOrphans = do { res <- fields `endBy` (char '\n'); modifyState reverse; getSta
 parseHash :: Stream s m Char => ParsecT s u m [Char]
 parseHash = many1 hexDigit
 
-parseGitOrphanList :: String -> Either String GitOrphanList
+parseGitOrphanList :: String -> Either ParseError GitOrphanList
 parseGitOrphanList input = do
   let init = []
-  case (runParser accOrphans init "" input) of
-    Left err     -> Left $ show err
-    Right result -> Right result
+  runParser accOrphans init "" input
 
 parseHashKindSize :: Monad m => String -> (Hash -> Size -> GitObject) -> ParsecT String u m GitObject
 parseHashKindSize kind f = try (do
@@ -95,12 +91,10 @@ objectDesc f = (choice [
 accObjects :: ParsecT String [GitObject] Identity [GitObject]
 accObjects = do { _ <- (do o <- (objectDesc parseHashKindSize); modifyState (o:); return ()) `endBy` (char '\n'); modifyState reverse; getState }
 
-parseGitObjectList :: String -> Either String [GitObject]
+parseGitObjectList :: String -> Either ParseError [GitObject]
 parseGitObjectList input = do
   let init = []
-  case (runParser accObjects init "" input) of
-    Left err    -> Left $ show err
-    Right result -> Right result
+  runParser accObjects init "" input
 
 fileName :: Stream s m Char => ParsecT s u m String
 fileName = many1 $ choice (alphaNum : (fmap char "_ ."))
@@ -114,10 +108,8 @@ parseTreeLine = do
                   name <- fileName
                   return $ GitTreeEntry mode desc name
 
-parseTree :: String -> Either String [GitTreeEntry]
-parseTree x = case (parse (parseTreeLine `endBy` (char '\n')) "" x) of
-  Left err     -> Left $ show err
-  Right result -> Right result
+parseTree :: String -> Either ParseError [GitTreeEntry]
+parseTree x = parse (parseTreeLine `endBy` (char '\n')) "" x
 
 catCommitLines :: ParsecT String GitObject Identity GitObject
 catCommitLines = do
@@ -132,7 +124,5 @@ catCommitLines = do
   where f :: Stream s m Char => String -> ParsecT s u m v -> (v -> u -> u) -> ParsecT s u m u
         f label parser update = do { _ <- try (string label); _ <- space1; v <- parser; modifyState (update v); getState }
 
-parseCatCommit :: GitObject -> String -> Either String GitObject
-parseCatCommit init x = case (runParser catCommitLines init "" x) of
-  Left err     -> Left $ show err
-  Right result -> Right result
+parseCatCommit :: GitObject -> String -> Either ParseError GitObject
+parseCatCommit init x = runParser catCommitLines init "" x
