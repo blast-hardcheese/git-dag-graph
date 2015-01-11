@@ -54,8 +54,12 @@ main = do
   let treeNodes = concat $ fst <$> treeNodesAndEdges
   let treeEdges = concat $ snd <$> treeNodesAndEdges
 
-  let nodes = treeNodes
-  let edges = treeEdges
+  let commitNodesAndEdges = commitPairToNodesAndEdges <$> commitPairs
+  let commitNodes = fst <$> commitNodesAndEdges
+  let commitEdges = concat $ snd <$> commitNodesAndEdges
+
+  let nodes = treeNodes ++ commitNodes
+  let edges = treeEdges ++ commitEdges
 
   let graph = DotGraph { strictGraph = True
                        , directedGraph = True
