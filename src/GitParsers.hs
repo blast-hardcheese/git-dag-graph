@@ -4,6 +4,7 @@ module GitParsers where
 import Control.Applicative ((<*>),(<$>))
 import Control.Monad.Identity
 import Text.Parsec
+import Data.Maybe (fromMaybe)
 
 import Types
 
@@ -115,5 +116,23 @@ parseTreeLine = do
 
 parseTree :: String -> Either String [GitTreeEntry]
 parseTree x = case (parse (parseTreeLine `endBy` (char '\n')) "" x) of
+  Left err     -> Left $ show err
+  Right result -> Right result
+
+catCommitLines :: ParsecT String GitObject Identity GitObject
+catCommitLines = do
+  let options = (choice [
+               f "tree" parseHash (\v s -> s { commitTree = Just v })
+             , f "parent" parseHash (\v s -> s { commitParents = Just $ (fromMaybe [] (commitParents s)) ++ [v] })
+             , f "author" dropLine (\v s -> s)
+             , f "committer" dropLine (\v s -> s)
+             ])
+  _ <- options `endBy1` (char '\n')
+  getState
+  where f :: Stream s m Char => String -> ParsecT s u m v -> (v -> u -> u) -> ParsecT s u m u
+        f label parser update = do { _ <- try (string label); _ <- space1; v <- parser; modifyState (update v); getState }
+
+parseCatCommit :: GitObject -> String -> Either String GitObject
+parseCatCommit init x = case (runParser catCommitLines init "" x) of
   Left err     -> Left $ show err
   Right result -> Right result
