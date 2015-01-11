@@ -38,8 +38,8 @@ main = do
   {-print objects-}
   {-putStrLn ""-}
 
-  (pairs, orphans) <- extractTrees "test.git" objects
-  (commits, orphans) <- extractCommits "test.git" orphans
+  (treePairs, orphans) <- extractTrees "test.git" objects
+  (commitPairs, orphans) <- extractCommits "test.git" orphans
 
   let orphanNodes = ((objectToNode BoxShape "?") <$> orphans)
 
@@ -50,9 +50,13 @@ main = do
                                                      , nodeStmts = orphanNodes
                                                      , edgeStmts = [] }}
 
-  let nodesAndEdges = treePairToNodesAndEdges <$> pairs
-  let nodes = concat $ fst <$> nodesAndEdges
-  let edges = concat $ snd <$> nodesAndEdges
+  let treeNodesAndEdges = treePairToNodesAndEdges <$> treePairs
+  let treeNodes = concat $ fst <$> treeNodesAndEdges
+  let treeEdges = concat $ snd <$> treeNodesAndEdges
+
+  let nodes = treeNodes
+  let edges = treeEdges
+
   let graph = DotGraph { strictGraph = True
                        , directedGraph = True
                        , graphID = Nothing
