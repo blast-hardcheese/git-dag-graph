@@ -69,7 +69,7 @@ parseHashKindSize kind f = try (do
   _ <- char ' '
   _ <- string kind
   _ <- char ' '
-  size <- read <$> many1 digit
+  size <- (read <$> many1 digit) <|> ((\x -> (-1)) <$> char '-')
   return (f hash size))
 
 parseKindHashSize :: Monad m => String -> (Hash -> Size -> GitObject) -> ParsecT String u m GitObject
@@ -78,7 +78,7 @@ parseKindHashSize kind f = try (do
   _ <- space1
   hash <- parseHash
   _ <- space1
-  size <- read <$> many1 digit
+  size <- (read <$> many1 digit) <|> ((\x -> (-1)) <$> char '-')
   return (f hash size))
 
 objectDesc :: Monad m => (String -> (Hash -> Size -> GitObject) -> ParsecT String u m GitObject) -> ParsecT String u m GitObject
