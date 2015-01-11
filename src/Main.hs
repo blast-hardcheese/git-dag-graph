@@ -16,30 +16,29 @@ import Data.GraphViz.Attributes.Complete (Attribute (Weight, Image), StyleName (
 
 main :: IO ()
 main = do
-  fname <- generateStaticGraph
-  putStrLn fname
+  let target = "test.git"
 
-  {-objects <- countObjects "test.git"-}
+  {-objects <- countObjects target-}
   {-print objects-}
   {-putStrLn ""-}
 
   {-putStrLn "findOrphans"-}
-  {-orphans <- findOrphans "test.git"-}
+  {-orphans <- findOrphans target-}
   {-print orphans-}
   {-putStrLn ""-}
 
   {-putStrLn "getAllObjectHashes"-}
-  files <- getAllObjectHashes "test.git"
+  files <- getAllObjectHashes target
   {-print files-}
   {-putStrLn ""-}
 
   {-putStrLn "objectHashesToObjects"-}
-  (Right objects) <- objectHashesToObjects "test.git" files
+  (Right objects) <- objectHashesToObjects target files
   {-print objects-}
   {-putStrLn ""-}
 
-  (treePairs, orphans) <- extractTrees "test.git" objects
-  (commitPairs, orphans) <- extractCommits "test.git" orphans
+  (treePairs, orphans) <- extractTrees target objects
+  (commitPairs, orphans) <- extractCommits target orphans
 
   let orphanNodes = ((objectToNode BoxShape "?") <$> orphans)
 
