@@ -8,7 +8,7 @@ import GitParsers (parseGitObjects, parseGitOrphanList, parseGitObjectList, pars
 import Control.Applicative
 
 import Data.Either
-import Data.Maybe (isJust, listToMaybe)
+import Data.Maybe (isJust, listToMaybe, catMaybes)
 
 import System.Process
 import GHC.IO.Handle
@@ -85,6 +85,13 @@ extractTrees fp objects = do
   return (treePairs, orphans)
 
 -- Given a list of gitObjects, extract commitPairs and orphans
-extractCommits :: FilePath -> [GitObject] -> IO ([(GitObject, GitObject)], [GitObject])
+extractCommits :: FilePath -> [GitObject] -> IO ([(GitObject, Maybe GitObject)], [GitObject])
 extractCommits fp objects = do
-  return ([], [])
+  let commitObjects = filter (\x -> case x of { (GitCommitObject _ _ _ _) -> True; _ -> False }) objects
+  fullObjects <- rights <$> (sequence $ (catFile fp) <$> commitObjects)
+
+  let claimed = catMaybes $ commitTree <$> fullObjects
+  let orphans = filter ((flip notElem claimed) . objectHash) objects
+  let pairs = (\c -> (c, listToMaybe $ filter ((== commitTree c) . Just . objectHash) objects)) <$> fullObjects
+
+  return (pairs, orphans)
