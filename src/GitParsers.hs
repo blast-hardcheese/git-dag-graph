@@ -66,9 +66,9 @@ parseGitOrphanList input = do
 parseHashKindSize :: Monad m => String -> (Hash -> Size -> GitObject) -> ParsecT String u m GitObject
 parseHashKindSize kind f = try (do
   hash <- parseHash
-  _ <- char ' '
+  _ <- space1
   _ <- string kind
-  _ <- char ' '
+  _ <- space1
   size <- (read <$> many1 digit) <|> ((\x -> (-1)) <$> char '-')
   return (f hash size))
 
