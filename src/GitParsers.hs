@@ -73,13 +73,13 @@ parseHashKindSize kind f = try (do
   return (f hash size))
 
 parseKindHashSize :: Monad m => String -> (Hash -> Size -> GitObject) -> ParsecT String u m GitObject
-parseKindHashSize kind f = try (do
-  _ <- string kind
+parseKindHashSize kind f = do
+  _ <- try (string kind)
   _ <- space1
   hash <- parseHash
   _ <- space1
   size <- (read <$> many1 digit) <|> ((\x -> (-1)) <$> char '-')
-  return (f hash size))
+  return (f hash size)
 
 objectDesc :: Monad m => (String -> (Hash -> Size -> GitObject) -> ParsecT String u m GitObject) -> ParsecT String u m GitObject
 objectDesc f = (choice [
@@ -97,7 +97,7 @@ parseGitObjectList input = do
   runParser accObjects init "" input
 
 fileName :: Stream s m Char => ParsecT s u m String
-fileName = many1 $ choice (alphaNum : (fmap char "_ ."))
+fileName = many1 $ choice (alphaNum : (char <$> "-_ ."))
 
 parseTreeLine :: ParsecT String u Identity GitTreeEntry
 parseTreeLine = do
