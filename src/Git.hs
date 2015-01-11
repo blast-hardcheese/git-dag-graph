@@ -63,6 +63,8 @@ lsTree fp hash = parseTree <$> runStdOut "git" ["ls-tree", "-l", hash] fp
 catFile :: FilePath -> GitObject -> IO (Either String GitObject)
 catFile fp o@(GitCommitObject h _ _ _) = parseCatCommit o <$> runStdOut "git" ["cat-file", "-p", h] fp
 
+-- Convenience:
+
 -- Given a list of gitObjects, extract treePairs and orphans
 extractTrees :: FilePath -> [GitObject] -> IO ([(GitObject, [GitTreeEntry])], [GitObject])
 extractTrees fp objects = do
