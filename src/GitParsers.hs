@@ -19,6 +19,9 @@ octal = fromOctal <$> many1 octDigit
 space1 :: Stream s m Char => Monad m => ParsecT s u m [Char]
 space1 = many1 (char ' ')
 
+dropLine :: Stream s m Char => ParsecT s u m [Char]
+dropLine = anyChar `manyTill` (lookAhead endOfLine)
+
 labelNum :: Stream s m Char => String -> ParsecT s u m Int
 labelNum label = do { try (do _ <- string label; return ()); _ <- char ':'; _ <- many space; res <- many1 digit; return (read res) }
 
