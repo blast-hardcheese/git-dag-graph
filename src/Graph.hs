@@ -3,6 +3,8 @@ module Graph where
 
 import Control.Applicative
 
+import Data.Maybe (maybeToList)
+
 import Data.GraphViz
 import Data.GraphViz.Types.Canonical
 import Data.GraphViz.Attributes.Complete (Attribute (Weight, Image), StyleName (Dashed), StyleItem (SItem))
@@ -74,6 +76,14 @@ treePairToNodesAndEdges (tree, treeNodes) = (nodes, edges)
         nodes = treeNode : (fromTreeEntry <$> treeNodes)
         treeHash = shortHash $ objectHash tree
         edges = (\h -> DotEdge treeHash h [Weight $ Int 50]) <$> (shortHash . objectHash . treeObject) <$> treeNodes
+
+commitPairToNodesAndEdges :: (GitObject, Maybe GitObject) -> (DotNode String, [DotEdge String])
+commitPairToNodesAndEdges (commit, tree) = (commitNode, treeEdge ++ parentEdges)
+  where commitHash = shortHash $ objectHash commit
+        treeHash = (shortHash . objectHash) <$> tree
+        treeEdge = maybeToList $ (\hash -> DotEdge commitHash hash [Weight $ Int 25]) <$> treeHash
+        commitNode = DotNode commitHash [shape BoxShape, textLabel $ T.pack commitHash]
+        parentEdges = (\h -> DotEdge (shortHash h) (shortHash $ objectHash commit) [Weight $ Int 100]) <$> commitParents commit
 
 generateStaticGraph :: IO String
 generateStaticGraph = do
